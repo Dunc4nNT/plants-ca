@@ -7,7 +7,6 @@ function data = create_gui(data)
     data.default_play_speed = 0.905;
     data.play_speed = data.default_play_speed;
     data.is_editing = false;
-    data.colourmap = [data.secondary_colour_800; data.primary_colour_200];
 
     data.fig = figure(
         "name", "Plants CA",
@@ -19,14 +18,7 @@ function data = create_gui(data)
         "sizechangedfcn", @on_window_size_change
     );
 
-    data.axs = axes(
-        "units", "normalized",
-        "position", [0, 0, 0.75, 1],
-        "colormap", data.colourmap
-    );
-
-    data.img = imagesc(data.axs, data.world.get_colours());
-    axis(data.axs, "off");
+    data.img = imshow(data.world.get_colours(), data.world.get_colourmap(), set(gca, "position", [0.05, 0.05, 0.7, 0.75]));
 
     data.previous_step_button = uicontrol(
         "style", "pushbutton",
@@ -156,7 +148,7 @@ endfunction
 
 % Update world and UI elements.
 function update_gui(data, source)
-    set(data.img, "cdata", data.world.cells);
+    set(data.img, "cdata", data.world.get_colours());
     set(data.generation_label, "string", data.world.generation_str());
     guidata(source, data);
     drawnow();

@@ -5,6 +5,7 @@ classdef world
         generation;
         cells;
         start_generation_at;
+        colourmap;
     endproperties
 
     methods(Access = "protected")
@@ -40,6 +41,10 @@ classdef world
             this.start_generation_at = start_generation_at;
             this.cells = this.get_preset_cells();
             this.generation = this.start_generation_at;
+            this.colourmap = [
+                0.1450980392156863, 0.09411764705882353, 0.1411764705882353;
+                0.8627450980392157, 0.8901960784313725, 0.8941176470588236;
+            ];
         endfunction
 
         function reset_world(this)
@@ -85,6 +90,10 @@ classdef world
 
         function generation = get_generation(this)
             generation = this.generation;
+        endfunction
+
+        function colourmap = get_colourmap(this)
+            colourmap = this.colourmap;
         endfunction
     endmethods
 

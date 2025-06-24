@@ -12,27 +12,18 @@ classdef material_type
     endproperties
 
     methods(Static = true)
-        function colour = get_colour(type)
-            switch (type)
-                case material_type.IMMOVABLE
-                    colour = [0, 0, 0];
-                case material_type.SUN
-                    colour = [0.9803921568627451, 0.8980392156862745, 0];
-                case material_type.EARTH
-                    colour = [0.3686274509803922, 0.16470588235294117, 0];
-                case material_type.AIR
-                    colour = [0.2196078431372549, 0.6980392156862745, 0.9215686274509803];
-                case material_type.SEED
-                    colour = [0.7686274509803922, 0.7098039215686275, 0.5607843137254902];
-                case material_type.ROOT
-                    colour = [1, 0.34901960784313724, 0];
-                case material_type.LEAF
-                    colour = [0, 0.6196078431372549, 0.17647058823529413];
-                case material_type.FLOWER
-                    colour = [1, 0.47843137254901963, 0.9568627450980393];
-                otherwise
-                    colour = [0.1450980392156863, 0.09411764705882353, 0.1411764705882353];
-            endswitch
+        function colourmap = get_colourmap()
+            colourmap = [
+                0.1450980392156863, 0.09411764705882353, 0.1411764705882353;
+                0, 0, 0;
+                0.9803921568627451, 0.8980392156862745, 0;
+                0.3686274509803922, 0.16470588235294117, 0;
+                0.2196078431372549, 0.6980392156862745, 0.9215686274509803;
+                0.7686274509803922, 0.7098039215686275, 0.5607843137254902;
+                1, 0.34901960784313724, 0;
+                0, 0.6196078431372549, 0.17647058823529413;
+                1, 0.47843137254901963, 0.9568627450980393;
+            ];
         endfunction
 
         function energy = get_default_energy(type)

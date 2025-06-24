@@ -2,6 +2,8 @@ classdef plants_world < world
     methods
         function this = plants_world(width, height, start_generation_at = uint32(0))
             this@world(width, height, start_generation_at);
+
+            this.colourmap = material_type.get_colourmap();
         endfunction
 
         function world_material = create_material(this, type, energy = 0)
@@ -45,8 +47,7 @@ classdef plants_world < world
         endfunction
 
         function colours = get_colours(this)
-            % TODO: fix this so it calls get_colour for every type in the struct array.
-            colours = arrayfun(@material_type.get_colour, this.cells(:, :).type);
+            colours = cell2mat(arrayfun(@(x) x.type, this.cells, "uniformoutput", false)) + 1;
         endfunction
 
         function this = next_step(this)
