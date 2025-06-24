@@ -1,2 +1,3 @@
-# plants-ca
+# Plants CA
+
 Plant Growth Cellular Automaton
