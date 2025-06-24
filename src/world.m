@@ -15,8 +15,8 @@ classdef world
                 error([name, " must be an integer."])
             endif
 
-            if (x < 1)
-                error([name, " must be greater than zero."])
+            if (x < 10)
+                error([name, " must be greater than or equal to 10."])
             endif
 
             if (mod(x, 2) != 0)
@@ -96,6 +96,9 @@ classdef world
         endfunction
 
         function this = previous_step(this)
+        endfunction
+
+        function colours = get_colours(this)
         endfunction
     endmethods
 endclassdef

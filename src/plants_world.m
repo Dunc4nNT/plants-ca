@@ -4,8 +4,49 @@ classdef plants_world < world
             this@world(width, height, start_generation_at);
         endfunction
 
+        function world_material = create_material(this, type, energy = 0)
+            world_material.type = type;
+            world_material.energy = energy;
+        endfunction
+
         function cells = get_preset_cells(this)
-            cells = zeros(this.height, this.width);
+            sun_cell = this.create_material(
+                material_type.SUN,
+                material_type.get_default_energy(material_type.SUN)
+            );
+            sun_mat = repmat(sun_cell, 2, this.width);
+
+            immovable_cell = this.create_material(
+                material_type.IMMOVABLE,
+                material_type.get_default_energy(material_type.IMMOVABLE)
+            );
+            immovable_mat = repmat(immovable_cell, 2, this.width);
+
+            air_cell = this.create_material(
+                material_type.AIR,
+                material_type.get_default_energy(material_type.AIR)
+            );
+            air_mat = repmat(air_cell, this.height / 2 - 2, this.width);
+
+            earth_cell = this.create_material(
+                material_type.EARTH,
+                material_type.get_default_energy(material_type.EARTH)
+            );
+            earth_mat = repmat(earth_cell, this.height / 2 - 2, this.width);
+
+            seed_cell = this.create_material(
+                material_type.SEED,
+                material_type.get_default_energy(material_type.SEED)
+            );
+
+            cells = [sun_mat; air_mat; earth_mat; immovable_mat];
+
+            cells([this.height / 2, this.width / 2; this.height / 2 + 1, this.width / 2]);
+        endfunction
+
+        function colours = get_colours(this)
+            % TODO: fix this so it calls get_colour for every type in the struct array.
+            colours = arrayfun(@material_type.get_colour, this.cells(:, :).type);
         endfunction
 
         function this = next_step(this)

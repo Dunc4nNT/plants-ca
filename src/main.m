@@ -1,8 +1,8 @@
 clear all;
 close all;
 
-data.world_width = uint32(100);
-data.world_height = uint32(100);
+data.world_width = uint32(10);
+data.world_height = uint32(10);
 data.start_generation_at = uint32(0);
 data.primary_colour_200 = [0.8627450980392157, 0.8901960784313725, 0.8941176470588236];
 data.secondary_colour_300 = [0.8117647058823529, 0.7098039215686275, 0.803921568627451];

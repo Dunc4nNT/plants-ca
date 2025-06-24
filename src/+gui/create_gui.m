@@ -25,7 +25,7 @@ function data = create_gui(data)
         "colormap", data.colourmap
     );
 
-    data.img = imagesc(data.axs, data.world.get_cells());
+    data.img = imagesc(data.axs, data.world.get_colours());
     axis(data.axs, "off");
 
     data.previous_step_button = uicontrol(
