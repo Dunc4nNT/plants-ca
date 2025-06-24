@@ -43,7 +43,8 @@ classdef plants_world < world
 
             cells = [sun_mat; air_mat; earth_mat; immovable_mat];
 
-            cells([this.height / 2, this.width / 2; this.height / 2 + 1, this.width / 2]);
+            cells(this.height / 2, this.width / 2) = seed_cell;
+            cells(this.height / 2 + 1, this.width / 2) = seed_cell;
         endfunction
 
         function colours = get_colours(this)
