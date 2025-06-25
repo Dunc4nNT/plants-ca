@@ -84,11 +84,15 @@ classdef plants_world < world
             % seed_above_neighbours = [zeros(rows(seed_above_neighbours), 1), seed_above_neighbours, zeros(rows(seed_above_neighbours), 1)];
             % seed_above_neighbours = (air_cells + seed_above_neighbours)
 
-            % BUG: if no seed is available, this errors.
-            new_cells(seed_above_to_leaf).type = material_type.LEAF;
-            new_cells(seed_above_to_leaf).energy -= this.seed_to_plant_energy;
-            new_cells(seed_below_to_root).type = material_type.ROOT;
-            new_cells(seed_below_to_root).energy -= this.seed_to_plant_energy;
+            if sum(sum(seed_above_to_leaf)) > 0
+                new_cells(seed_above_to_leaf).type = material_type.LEAF;
+                new_cells(seed_above_to_leaf).energy -= this.seed_to_plant_energy;
+            endif
+
+            if sum(sum(seed_below_to_root)) > 0
+                new_cells(seed_below_to_root).type = material_type.ROOT;
+                new_cells(seed_below_to_root).energy -= this.seed_to_plant_energy;
+            endif
 
             this.cells = new_cells;
         endfunction
