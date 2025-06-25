@@ -27,29 +27,5 @@ classdef material_type
                 0.7686274509803922, 0.7098039215686275, 0.5607843137254902;
             ];
         endfunction
-
-        function energy = get_default_energy(type)
-            switch (type)
-                case material_type.IMMOVABLE
-                    energy = Inf;
-                case material_type.SUN
-                    energy = Inf;
-                case material_type.EARTH
-                    energy = 0;
-                case material_type.AIR
-                    energy = 0;
-                case material_type.SEED_BELOW
-                    energy = 0;
-                case material_type.SEED_ABOVE
-                    energy = 0;
-                case material_type.ROOT
-                    energy = 0;
-                case material_type.LEAF
-                    energy = 0;
-                case material_type.FLOWER
-                    energy = 0;
-                otherwise
-            endswitch
-        endfunction
     endmethods
 endclassdef
