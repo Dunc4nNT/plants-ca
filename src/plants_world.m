@@ -1,4 +1,8 @@
 classdef plants_world < world
+    properties
+        seed_to_plant_energy = 25;
+    endproperties
+
     methods
         function this = plants_world(width, height, start_generation_at = uint32(0))
             this@world(width, height, start_generation_at);
@@ -36,15 +40,20 @@ classdef plants_world < world
             );
             earth_mat = repmat(earth_cell, this.height / 2 - 2, this.width);
 
-            seed_cell = this.create_material(
-                material_type.SEED,
-                material_type.get_default_energy(material_type.SEED)
+            seed_below_cell = this.create_material(
+                material_type.SEED_BELOW,
+                50
+            );
+
+            seed_above_cell = this.create_material(
+                material_type.SEED_ABOVE,
+                50
             );
 
             cells = [sun_mat; air_mat; earth_mat; immovable_mat];
 
-            cells(this.height / 2, this.width / 2) = seed_cell;
-            cells(this.height / 2 + 1, this.width / 2) = seed_cell;
+            cells(this.height / 2, this.width / 2) = seed_above_cell;
+            cells(this.height / 2 + 1, this.width / 2) = seed_below_cell;
         endfunction
 
         function colours = get_colours(this)
@@ -52,7 +61,36 @@ classdef plants_world < world
         endfunction
 
         function this = next_step(this)
-            error("next_step is not implemented.")
+            new_cells = this.cells;
+
+            cell_types = cell2mat(arrayfun(@(x) x.type, this.cells, "uniformoutput", false));
+            cell_energy = cell2mat(arrayfun(@(x) x.energy, this.cells, "uniformoutput", false));
+            air_cells = cell_types == material_type.AIR;
+            earth_cells = cell_types == material_type.EARTH;
+            seed_above_cells = cell_types == material_type.SEED_ABOVE;
+            seed_below_cells = cell_types == material_type.SEED_BELOW;
+
+            neighbouring_air_cells = conv2(air_cells, ones(3), "same");
+            seed_above_air = (neighbouring_air_cells & seed_above_cells) .* neighbouring_air_cells;
+            neighbouring_earth_cells = conv2(earth_cells, ones(3), "same");
+            seed_below_earth = (neighbouring_earth_cells & seed_below_cells) .* neighbouring_earth_cells;
+            inf_inx = cell_energy == Inf;
+            cell_energy(inf_inx) = 0;
+            seed_above_to_leaf = logical(logical(seed_above_air) .* cell_energy >= this.seed_to_plant_energy);
+            seed_below_to_root = logical(logical(seed_below_earth) .* cell_energy >= this.seed_to_plant_energy);
+
+            % seed_above_neighbours = conv2(seed_above_cell, ones(3), "valid");
+            % seed_above_neighbours = [zeros(1, columns(seed_above_neighbours)); seed_above_neighbours; zeros(1, columns(seed_above_neighbours))];
+            % seed_above_neighbours = [zeros(rows(seed_above_neighbours), 1), seed_above_neighbours, zeros(rows(seed_above_neighbours), 1)];
+            % seed_above_neighbours = (air_cells + seed_above_neighbours)
+
+            % BUG: if no seed is available, this errors.
+            new_cells(seed_above_to_leaf).type = material_type.LEAF;
+            new_cells(seed_above_to_leaf).energy -= this.seed_to_plant_energy;
+            new_cells(seed_below_to_root).type = material_type.ROOT;
+            new_cells(seed_below_to_root).energy -= this.seed_to_plant_energy;
+
+            this.cells = new_cells;
         endfunction
 
         function this = previous_step(this)

@@ -5,10 +5,11 @@ classdef material_type
         SUN = 2
         EARTH = 3
         AIR = 4
-        SEED = 5
+        SEED_BELOW = 5
         ROOT = 6
         LEAF = 7
         FLOWER = 8
+        SEED_ABOVE = 9
     endproperties
 
     methods(Static = true)
@@ -23,6 +24,7 @@ classdef material_type
                 1, 0.34901960784313724, 0;
                 0, 0.6196078431372549, 0.17647058823529413;
                 1, 0.47843137254901963, 0.9568627450980393;
+                0.7686274509803922, 0.7098039215686275, 0.5607843137254902;
             ];
         endfunction
 
@@ -36,7 +38,9 @@ classdef material_type
                     energy = 0;
                 case material_type.AIR
                     energy = 0;
-                case material_type.SEED
+                case material_type.SEED_BELOW
+                    energy = 0;
+                case material_type.SEED_ABOVE
                     energy = 0;
                 case material_type.ROOT
                     energy = 0;
