@@ -20,7 +20,7 @@ function data = create_gui(data)
 
     data.axs = axes(
         "units", "normalized",
-        "position", [0.05, 0.05, 0.7, 0.75],
+        "position", [0.05, 0.12, 0.7, 0.75],
         "colormap", data.world.get_colourmap()
     );
 
@@ -59,7 +59,7 @@ function data = create_gui(data)
         "string", data.world.generation_str(),
         "foregroundcolor", data.secondary_colour_300,
         "backgroundcolor", data.secondary_colour_600,
-        "position", [0.30, 0.87, 0.20, 0.10],
+        "position", [0.05, 0.87, 0.7, 0.10],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "fontweight", "bold"
