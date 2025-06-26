@@ -18,6 +18,10 @@ classdef plants_world
         grow_leaf_energy = 25;
         % Amout of air cells neighbouring a leaf cell required for the leaf cell to grow.
         grow_leaf_air = 2;
+        % Amount of air cells neighbouring a leaf cell required for a flower cell to grow.
+        grow_flower_air = 3;
+        % Amount of energy required for a flower to grow.
+        grow_flower_energy = 50;
         % Amount of energy a new root cell starts with.
         root_start_energy = 5;
         % Amount of energy a new leaf cell starts with.
@@ -26,6 +30,10 @@ classdef plants_world
         root_grow_probability = 1/3;
         % Probability a leaf grows in a generation.
         leaf_grow_probability = 2/3;
+        % Probability a flower grows in a generation.
+        flower_grow_probability = 1/50;
+        % Amount of energy a new flower cell starts with.
+        flower_start_energy = 5;
         % Default energy values per material.
         default_immovable_energy = Inf;
         default_sun_energy = Inf;
@@ -144,10 +152,23 @@ classdef plants_world
             type_cells = [sun_type_cells; air_type_cells; earth_type_cells; immovable_type_cells];
             energy_cells = [sun_energy_cells; air_energy_cells; earth_energy_cells; immovable_energy_cells];
 
-            type_cells(this.height / 2 + 1, this.width / 2) = material_type.SEED_BELOW;
-            energy_cells(this.height / 2 + 1, this.width / 2) = this.default_seed_below_energy;
-            type_cells(this.height / 2, this.width / 2) = material_type.SEED_ABOVE;
-            energy_cells(this.height / 2, this.width / 2) = this.default_seed_above_energy;
+            seed_below_height = this.height / 2 + 1;
+            seed_above_height = this.height / 2;
+
+            type_cells(seed_below_height, this.width / 2) = material_type.SEED_BELOW;
+            energy_cells(seed_below_height, this.width / 2) = this.default_seed_below_energy;
+            type_cells(seed_above_height, this.width / 2) = material_type.SEED_ABOVE;
+            energy_cells(seed_above_height, this.width / 2) = this.default_seed_above_energy;
+
+            type_cells(seed_below_height, round(this.width / 6)) = material_type.SEED_BELOW;
+            energy_cells(seed_below_height, round(this.width / 6)) = this.default_seed_below_energy;
+            type_cells(seed_above_height, round(this.width / 6)) = material_type.SEED_ABOVE;
+            energy_cells(seed_above_height, round(this.width / 6)) = this.default_seed_above_energy;
+
+            type_cells(seed_below_height, round(this.width * 0.7)) = material_type.SEED_BELOW;
+            energy_cells(seed_below_height, round(this.width * 0.7)) = this.default_seed_below_energy;
+            type_cells(seed_above_height, round(this.width * 0.7)) = material_type.SEED_ABOVE;
+            energy_cells(seed_above_height, round(this.width * 0.7)) = this.default_seed_above_energy;
         endfunction
 
         function colours = get_colours(this)
@@ -278,6 +299,22 @@ classdef plants_world
                   this.energy_cells(air_to_leaf) = this.leaf_start_energy;
                 else
                   this.energy_cells(leaf_cells) -= this.grow_leaf_energy / 2;
+                endif
+            endif
+
+            % Try growing flower.
+            growable_flowers = logical(logical(leaf_air) .* cell_energy >= this.grow_flower_energy) & leaf_air > this.grow_flower_air;
+            potential_new_flower_cells = air_cells & conv2(growable_flowers, ones(3), "same") & neighbouring_air_cells > (this.grow_flower_air - 1);
+            potential_new_flower_cells_idx = find(potential_new_flower_cells);
+
+            if (size(potential_new_flower_cells_idx, 1) > 0)
+                air_to_flower = potential_new_flower_cells_idx(randi(size(potential_new_flower_cells_idx, 1), 1));
+                if (rand(1) < this.flower_grow_probability)
+                  this.energy_cells(leaf_cells) -= this.grow_flower_energy;
+                  this.type_cells(air_to_flower) = material_type.FLOWER;
+                  this.energy_cells(air_to_flower) = this.flower_start_energy;
+                else
+                  this.energy_cells(leaf_cells) -= this.grow_flower_energy / 2;
                 endif
             endif
 
