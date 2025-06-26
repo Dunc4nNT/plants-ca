@@ -1,3 +1,5 @@
+#!/usr/bin/env -S octave
+
 clear all;
 close all;
 
