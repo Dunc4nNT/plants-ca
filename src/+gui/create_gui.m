@@ -33,7 +33,7 @@ function data = create_gui(data)
         "string", "Next Step",
         "foregroundcolor", data.colour_grey_800,
         "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.90, 0.15, 0.05],
+        "position", [0.51, 0.05, 0.15, 0.05],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "tooltipstring", "Step to the next generation.",
@@ -46,7 +46,7 @@ function data = create_gui(data)
         "string", "Reset World",
         "foregroundcolor", data.colour_grey_800,
         "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.70, 0.15, 0.05],
+        "position", [0.80, 0.19, 0.15, 0.05],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "tooltipstring", "Reset world with random cells.",
@@ -57,11 +57,12 @@ function data = create_gui(data)
         "style", "text",
         "units", "normalized",
         "string", data.world.generation_str(),
-        "foregroundcolor", data.colour_grey_800,
-        "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.60, 0.15, 0.05],
+        "foregroundcolor", data.secondary_colour_300,
+        "backgroundcolor", data.secondary_colour_600,
+        "position", [0.30, 0.87, 0.20, 0.10],
         "fontunits", "normalized",
-        "fontsize", data.font_size_300
+        "fontsize", data.font_size_300,
+        "fontweight", "bold"
     );
 
     data.export_button = uicontrol(
@@ -70,24 +71,24 @@ function data = create_gui(data)
         "string", "Export World",
         "foregroundcolor", data.colour_grey_800,
         "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.50, 0.15, 0.05],
+        "position", [0.80, 0.12, 0.15, 0.05],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "tooltipstring", "Export the world.",
         "callback", @on_export
     );
 
-    data.import_button = uicontrol(
+    data.help_button = uicontrol(
         "style", "pushbutton",
         "units", "normalized",
-        "string", "Import World",
+        "string", "Help",
         "foregroundcolor", data.colour_grey_800,
         "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.40, 0.15, 0.05],
+        "position", [0.80, 0.05, 0.15, 0.05],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
-        "tooltipstring", "Import a world.",
-        "callback", @on_import
+        "tooltipstring", "Go to the wiki for help.",
+        "callback", @on_help
     );
 
     data.toggle_play_button = uicontrol(
@@ -96,7 +97,7 @@ function data = create_gui(data)
         "string", "Toggle Play",
         "foregroundcolor", data.colour_grey_800,
         "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.30, 0.15, 0.05],
+        "position", [0.13, 0.05, 0.15, 0.05],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "tooltipstring", "Play or pause the automaton simulation.",
@@ -113,13 +114,13 @@ function data = create_gui(data)
         "sliderstep", [0.001, 0.005],
         "foregroundcolor", data.colour_grey_800,
         "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.20, 0.15, 0.05],
+        "position", [0.32, 0.05, 0.15, 0.05],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "tooltipstring", "Adjust the simulation speed.",
         "callback", @on_adjust_speed
     );
-    
+
     guidata(data.fig, data);
     drawnow();
 
