@@ -18,7 +18,14 @@ function data = create_gui(data)
         "sizechangedfcn", @on_window_size_change
     );
 
-    data.img = imshow(data.world.get_colours(), data.world.get_colourmap(), set(gca, "position", [0.05, 0.05, 0.7, 0.75]));
+    data.axs = axes(
+        "units", "normalized",
+        "position", [0.05, 0.05, 0.7, 0.75],
+        "colormap", data.world.get_colourmap()
+    );
+
+    data.img = imagesc(data.axs, data.world.get_colours(), [1, length(data.world.get_colourmap())]);
+    axis(data.axs, "off");
 
     data.next_step_button = uicontrol(
         "style", "pushbutton",
