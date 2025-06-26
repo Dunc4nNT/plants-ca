@@ -22,16 +22,20 @@ classdef plants_world
         root_start_energy = 5;
         % Amount of energy a new leaf cell starts with.
         leaf_start_energy = 5;
+        % Probability a root grows in a generation.
+        root_grow_probability = 1/3;
+        % Probability a leaf grows in a generation.
+        leaf_grow_probability = 2/3;
         % Default energy values per material.
         default_immovable_energy = Inf;
         default_sun_energy = Inf;
-        default_earth_energy = 1000;
-        default_air_energy = 1000;
-        default_seed_below_energy = 1000;
-        default_seed_above_energy = 1000;
-        default_root_energy = 1000;
-        default_leaf_energy = 1000;
-        default_flower_energy = 1000;
+        default_earth_energy = 0;
+        default_air_energy = 0;
+        default_seed_below_energy = 0;
+        default_seed_above_energy = 0;
+        default_root_energy = 0;
+        default_leaf_energy = 0;
+        default_flower_energy = 0;
     endproperties
 
     methods(Access = "protected")
@@ -160,11 +164,68 @@ classdef plants_world
             leaf_cells = cell_types == material_type.LEAF;
             root_cells = cell_types == material_type.ROOT;
             flower_cells = cell_types == material_type.FLOWER;
+            sun_cells = cell_types == material_type.SUN;
+            immovable_cells = cell_types == material_type.IMMOVABLE;
 
+            % Neighbours
             neighbouring_earth_cells = conv2(earth_cells, ones(3), "same");
             neighbouring_air_cells = conv2(air_cells, ones(3), "same");
-            inf_inx = cell_energy == Inf;
-            cell_energy(inf_inx) = 0;
+            
+            % Sun and immovable, set to 100 for calculations.
+            inf_idx = sun_cells | immovable_cells;
+            cell_energy(inf_idx) = 100;
+
+            % Move energy through the world.
+            # Celltypes 1 en 2 kunnen energie naar beneden doorgeven, 3 en 4 naar boven
+            give_energy_down = sun_cells | air_cells;
+            give_energy_up = immovable_cells | earth_cells;
+
+            # Celltype 2 kan energie van boven ontvangen, 3 van onder en 5 van beide
+            recieve_energy_from_above = air_cells | leaf_cells | flower_cells | seed_above_cells;
+            recieve_energy_from_below = earth_cells | root_cells | seed_below_cells;
+
+            # Telt hoe veel cellen links, midden en rechts onder energie kunnen ontvangen van boven
+            neighbour_count_below = zeros(size(cell_energy));
+            if rows(cell_energy) > 1
+              neighbour_count_below(1:end-1, 2:end) = neighbour_count_below(1:end-1, 2:end) + recieve_energy_from_above(2:end, 1:end-1);
+              neighbour_count_below(1:end-1, :) = neighbour_count_below(1:end-1, :) + recieve_energy_from_above(2:end, :);
+              neighbour_count_below(1:end-1, 1:end-1) = neighbour_count_below(1:end-1, 1:end-1) + recieve_energy_from_above(2:end, 2:end);
+            endif
+
+            # Telt hoe veel cellen links, midden en rechts boven energie kunnen ontvangen van onder
+            neighbour_count_above = zeros(size(cell_energy));
+            if rows(cell_energy) > 1
+              neighbour_count_above(2:end, 2:end) = neighbour_count_above(2:end, 2:end) + recieve_energy_from_below(1:end-1, 1:end-1);
+              neighbour_count_above(2:end, :) = neighbour_count_above(2:end, :) + recieve_energy_from_below(1:end-1, :);
+              neighbour_count_above(2:end, 1:end-1) = neighbour_count_above(2:end, 1:end-1) + recieve_energy_from_below(1:end-1, 2:end);
+            endif
+
+            # De hoeveelheid energie die doorgeven wordt naar beneden/boven in matrices
+            energy_to_give_below = zeros(size(cell_energy));
+            energy_to_give_above = zeros(size(cell_energy));
+            
+            # Niet / 0, delen door aantal buren die energie kunnen ontvangen.
+            divisible_below = give_energy_down & (neighbour_count_below > 0);
+            energy_to_give_below(divisible_below) = cell_energy(divisible_below) ./ neighbour_count_below(divisible_below);
+
+            divisible_above = give_energy_up & (neighbour_count_above > 0);
+            energy_to_give_above(divisible_above) = cell_energy(divisible_above) ./ neighbour_count_above(divisible_above);
+
+            next_energy_world = zeros(size(cell_energy));
+
+            # De energie van celtypes 1 en 2 worden naar links, midden, rechts beneden doorgegeven aan types 2 en 5
+            if rows(cell_energy) > 1 && columns(cell_energy) > 1
+              next_energy_world(2:end, 1:end-1) = next_energy_world(2:end, 1:end-1) + energy_to_give_below(1:end-1, 2:end) .* recieve_energy_from_above(2:end, 1:end-1);
+              next_energy_world(2:end, :) = next_energy_world(2:end, :) + energy_to_give_below(1:end-1, :) .* recieve_energy_from_above(2:end, :);
+              next_energy_world(2:end, 2:end) = next_energy_world(2:end, 2:end) + energy_to_give_below(1:end-1, 1:end-1) .* recieve_energy_from_above(2:end, 2:end);
+
+              # De energie van celtypes 3 en 4 worden naar links, midden, rechts boven doorgegeven aan types 3 en 5
+              next_energy_world(1:end-1, 1:end-1) = next_energy_world(1:end-1, 1:end-1) + energy_to_give_above(2:end, 2:end) .* recieve_energy_from_below(1:end-1, 1:end-1);
+              next_energy_world(1:end-1, :) = next_energy_world(1:end-1, :) + energy_to_give_above(2:end, :) .* recieve_energy_from_below(1:end-1, :);
+              next_energy_world(1:end-1, 2:end) = next_energy_world(1:end-1, 2:end) + energy_to_give_above(2:end, 1:end-1) .* recieve_energy_from_below(1:end-1, 2:end);
+            endif
+
+            next_energy_world(inf_idx) = Inf;
 
             % Try turning seeds below the earth into roots.
             seed_below_earth = (neighbouring_earth_cells & seed_below_cells) .* neighbouring_earth_cells;
@@ -188,31 +249,39 @@ classdef plants_world
             neighbouring_root_cells = conv2(root_cells, ones(3), "same");
             root_earth = (neighbouring_earth_cells & root_cells) .* neighbouring_earth_cells;
             growable_roots = logical(logical(root_earth) .* cell_energy >= this.grow_root_energy) & root_earth > this.grow_root_earth;
-            potential_new_root_cells = earth_cells & conv2(growable_roots, ones(3), "same") & neighbouring_earth_cells > this.grow_root_earth;
+            potential_new_root_cells = earth_cells & conv2(growable_roots, ones(3), "same") & neighbouring_earth_cells > (this.grow_root_earth - 1);
             potential_new_root_cells_idx = find(potential_new_root_cells);
 
             if (size(potential_new_root_cells_idx, 1) > 0)
                 earth_to_root = potential_new_root_cells_idx(randi(size(potential_new_root_cells_idx, 1), 1));
-                % BUG: fix energy erroring when removing from multiple cells.
-                this.energy_cells(root_cells) -= this.grow_root_energy;
-                this.type_cells(earth_to_root) = material_type.ROOT;
-                this.energy_cells(earth_to_root) = this.root_start_energy;
+                if (rand(1) < this.root_grow_probability)
+                  this.energy_cells(root_cells) -= this.grow_root_energy;
+                  this.type_cells(earth_to_root) = material_type.ROOT;
+                  this.energy_cells(earth_to_root) = this.root_start_energy;
+                else
+                  this.energy_cells(root_cells) -= this.grow_root_energy / 2;
+                endif
             endif
 
             % Try growing leafs.
             neighbouring_leaf_cells = conv2(leaf_cells, ones(3), "same");
             leaf_air = (neighbouring_air_cells & leaf_cells) .* neighbouring_air_cells;
             growable_leafs = logical(logical(leaf_air) .* cell_energy >= this.grow_leaf_energy) & leaf_air > this.grow_leaf_air;
-            potential_new_leaf_cells = air_cells & conv2(growable_leafs, ones(3), "same") & neighbouring_air_cells > this.grow_leaf_air;
+            potential_new_leaf_cells = air_cells & conv2(growable_leafs, ones(3), "same") & neighbouring_air_cells > (this.grow_leaf_air - 1);
             potential_new_leaf_cells_idx = find(potential_new_leaf_cells);
 
             if (size(potential_new_leaf_cells_idx, 1) > 0)
                 air_to_leaf = potential_new_leaf_cells_idx(randi(size(potential_new_leaf_cells_idx, 1), 1));
-                % BUG: fix energy erroring when removing from multiple cells.
-                this.energy_cells(leaf_cells) -= this.grow_leaf_energy;
-                this.type_cells(air_to_leaf) = material_type.LEAF;
-                this.energy_cells(air_to_leaf) = this.leaf_start_energy;
+                if (rand(1) < this.leaf_grow_probability)
+                  this.energy_cells(leaf_cells) -= this.grow_leaf_energy;
+                  this.type_cells(air_to_leaf) = material_type.LEAF;
+                  this.energy_cells(air_to_leaf) = this.leaf_start_energy;
+                else
+                  this.energy_cells(leaf_cells) -= this.grow_leaf_energy / 2;
+                endif
             endif
+
+            this.energy_cells = next_energy_world;
 
             this.generation++;
         endfunction
