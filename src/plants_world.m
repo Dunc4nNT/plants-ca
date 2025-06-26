@@ -1,5 +1,13 @@
-classdef plants_world < world
+classdef plants_world
     properties
+        width;
+        height;
+        generation;
+        type_cells;
+        energy_cells;
+        start_generation_at;
+        colourmap;
+
         % Amount of energy required for a seed to turn into a plant (root/leaf cell).
         seed_to_plant_energy = 25;
         % Amount of energy required for a root to grow.
@@ -10,6 +18,10 @@ classdef plants_world < world
         grow_leaf_energy = 25;
         % Amout of air cells neighbouring a leaf cell required for the leaf cell to grow.
         grow_leaf_air = 2;
+        % Amount of energy a new root cell starts with.
+        root_start_energy = 5;
+        % Amount of energy a new leaf cell starts with.
+        leaf_start_energy = 5;
         % Default energy values per material.
         default_immovable_energy = Inf;
         default_sun_energy = Inf;
@@ -22,68 +34,125 @@ classdef plants_world < world
         default_flower_energy = 1000;
     endproperties
 
+    methods(Access = "protected")
+        function is_valid = _is_valid_size(self, x, name)
+            is_valid = false;
+
+            if (!isinteger(x))
+                error([name, " must be an integer."])
+            endif
+
+            if (x < 10)
+                error([name, " must be greater than or equal to 10."])
+            endif
+
+            if (mod(x, 2) != 0)
+                error([name, " must be a multiple of two."])
+            endif
+
+            is_valid = true;
+        endfunction
+    endmethods
+
     methods
         function this = plants_world(width, height, start_generation_at = uint32(0))
-            this@world(width, height, start_generation_at);
+            if (this._is_valid_size(width, "Width"))
+                this.width = width;
+            endif
 
+            if (this._is_valid_size(height, "Height"))
+                this.height = height;
+            endif
+
+            this.start_generation_at = start_generation_at;
+            [this.type_cells, this.energy_cells] = this.get_preset_cells();
+            this.generation = this.start_generation_at;
             this.colourmap = material_type.get_colourmap();
         endfunction
 
-        function world_material = create_material(this, type, energy = 0)
-            world_material.type = type;
-            world_material.energy = energy;
+        function this = reset_world(this)
+            [this.type_cells, this.energy_cells] = this.get_preset_cells();
+            this = this.reset_generation();
         endfunction
 
-        function cells = get_preset_cells(this)
-            sun_cell = this.create_material(
-                material_type.SUN,
-                this.default_sun_energy
-            );
-            sun_mat = repmat(sun_cell, 2, this.width);
+        function this = set_cells(this, type_cells, energy_cells)
+            if (!isequal(size(type_cells), size(energy_cells)))
+                error("type_cells and energy_cells must be of equal size.")
+            endif
 
-            immovable_cell = this.create_material(
-                material_type.IMMOVABLE,
-                this.default_immovable_energy
-            );
-            immovable_mat = repmat(immovable_cell, 2, this.width);
+            if (ndims(type_cells) != 2 | ndims(energy_cells) != 2)
+                error("New world cells must have exactly two dimensions.");
+                return;
+            endif
 
-            air_cell = this.create_material(
-                material_type.AIR,
-                this.default_air_energy
-            );
-            air_mat = repmat(air_cell, this.height / 2 - 2, this.width);
+            this.width = rows(type_cells);
+            this.height = columns(type_cells);
+            this.type_cells = type_cells;
+            this.energy_cells = energy_cells;
+            this = this.reset_generation();
+        endfunction
 
-            earth_cell = this.create_material(
-                material_type.EARTH,
-                this.default_earth_energy
-            );
-            earth_mat = repmat(earth_cell, this.height / 2 - 2, this.width);
+        function this = set_cell(this, x, y, type, energy)
+            if (x < 1 | x > columns(this.type_cells) | y < 1 | y > rows(this.type_cells))
+                error("Cell index is out of range.");
+            endif
 
-            seed_below_cell = this.create_material(
-                material_type.SEED_BELOW,
-                this.default_seed_below_energy
-            );
+            this.type_cells(y, x) = type;
+            this.energy_cells(y, x) = energy;
+        endfunction
 
-            seed_above_cell = this.create_material(
-                material_type.SEED_ABOVE,
-                this.default_seed_above_energy
-            );
+        function [type_cells, energy_cells] = get_cells(this)
+            type_cells = this.type_cells;
+            energy_cells = this.energy_cells;
+        endfunction
 
-            cells = [sun_mat; air_mat; earth_mat; immovable_mat];
+        function [type_cell, energy_cell] = get_cell(this, x, y)
+            type_cell = this.type_cells(y, x);
+            energy_cell = this.energy_cells(y, x);
+        endfunction
 
-            cells(this.height / 2, this.width / 2) = seed_above_cell;
-            cells(this.height / 2 + 1, this.width / 2) = seed_below_cell;
+        function this = reset_generation(this)
+            this.generation = this.start_generation_at;
+        endfunction
+
+        function generation_str = generation_str(this)
+            generation_str = ["Generation ", int2str(this.generation)];
+        endfunction
+
+        function generation = get_generation(this)
+            generation = this.generation;
+        endfunction
+
+        function colourmap = get_colourmap(this)
+            colourmap = this.colourmap;
+        endfunction
+
+        function [type_cells, energy_cells] = get_preset_cells(this)
+            sun_type_cells = repmat(material_type.SUN, 2, this.width);
+            sun_energy_cells = repmat(this.default_sun_energy, 2, this.width);
+            immovable_type_cells = repmat(material_type.IMMOVABLE, 2, this.width);
+            immovable_energy_cells = repmat(this.default_immovable_energy, 2, this.width);
+            air_type_cells = repmat(material_type.AIR, this.height / 2 - 2, this.width);
+            air_energy_cells = repmat(this.default_air_energy, this.height / 2 - 2, this.width);
+            earth_type_cells = repmat(material_type.EARTH, this.height / 2 - 2, this.width);
+            earth_energy_cells = repmat(this.default_earth_energy, this.height / 2 - 2, this.width);
+
+            type_cells = [sun_type_cells; air_type_cells; earth_type_cells; immovable_type_cells];
+            energy_cells = [sun_energy_cells; air_energy_cells; earth_energy_cells; immovable_energy_cells];
+
+            type_cells(this.height / 2 + 1, this.width / 2) = material_type.SEED_BELOW;
+            energy_cells(this.height / 2 + 1, this.width / 2) = this.default_seed_below_energy;
+            type_cells(this.height / 2, this.width / 2) = material_type.SEED_ABOVE;
+            energy_cells(this.height / 2, this.width / 2) = this.default_seed_above_energy;
         endfunction
 
         function colours = get_colours(this)
-            colours = cell2mat(arrayfun(@(x) x.type, this.cells, "uniformoutput", false)) + 1;
+            colours = this.type_cells + 1;
         endfunction
 
         function this = next_step(this)
-            old_cells = this.cells;
-
-            cell_types = cell2mat(arrayfun(@(x) x.type, old_cells, "uniformoutput", false));
-            cell_energy = cell2mat(arrayfun(@(x) x.energy, old_cells, "uniformoutput", false));
+            cell_types = this.type_cells;
+            cell_energy = this.energy_cells;
             air_cells = cell_types == material_type.AIR;
             earth_cells = cell_types == material_type.EARTH;
             seed_above_cells = cell_types == material_type.SEED_ABOVE;
@@ -102,8 +171,8 @@ classdef plants_world < world
             seed_below_to_root = logical(logical(seed_below_earth) .* cell_energy >= this.seed_to_plant_energy);
 
             if sum(sum(seed_below_to_root)) > 0
-                this.cells(seed_below_to_root).type = material_type.ROOT;
-                this.cells(seed_below_to_root).energy -= this.seed_to_plant_energy;
+                this.type_cells(seed_below_to_root) = material_type.ROOT;
+                this.energy_cells(seed_below_to_root) -= this.seed_to_plant_energy;
             endif
 
             % Try turning seeds above the earth into leafs.
@@ -111,8 +180,8 @@ classdef plants_world < world
             seed_above_to_leaf = logical(logical(seed_above_air) .* cell_energy >= this.seed_to_plant_energy);
 
             if sum(sum(seed_above_to_leaf)) > 0
-                this.cells(seed_above_to_leaf).type = material_type.LEAF;
-                this.cells(seed_above_to_leaf).energy -= this.seed_to_plant_energy;
+                this.type_cells(seed_above_to_leaf) = material_type.LEAF;
+                this.energy_cells(seed_above_to_leaf) -= this.seed_to_plant_energy;
             endif
 
             % Try growing roots.
@@ -125,8 +194,9 @@ classdef plants_world < world
             if (size(potential_new_root_cells_idx, 1) > 0)
                 earth_to_root = potential_new_root_cells_idx(randi(size(potential_new_root_cells_idx, 1), 1));
                 % BUG: fix energy erroring when removing from multiple cells.
-                % this.cells(root_cells).energy -= this.grow_root_energy;
-                this.cells(earth_to_root).type = material_type.ROOT;
+                this.energy_cells(root_cells) -= this.grow_root_energy;
+                this.type_cells(earth_to_root) = material_type.ROOT;
+                this.energy_cells(earth_to_root) = this.root_start_energy;
             endif
 
             % Try growing leafs.
@@ -139,8 +209,9 @@ classdef plants_world < world
             if (size(potential_new_leaf_cells_idx, 1) > 0)
                 air_to_leaf = potential_new_leaf_cells_idx(randi(size(potential_new_leaf_cells_idx, 1), 1));
                 % BUG: fix energy erroring when removing from multiple cells.
-                % this.cells(leaf_cells).energy -= this.grow_leaf_energy;
-                this.cells(air_to_leaf).type = material_type.LEAF;
+                this.energy_cells(leaf_cells) -= this.grow_leaf_energy;
+                this.type_cells(air_to_leaf) = material_type.LEAF;
+                this.energy_cells(air_to_leaf) = this.leaf_start_energy;
             endif
 
             this.generation++;

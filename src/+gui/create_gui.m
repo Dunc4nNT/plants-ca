@@ -20,19 +20,6 @@ function data = create_gui(data)
 
     data.img = imshow(data.world.get_colours(), data.world.get_colourmap(), set(gca, "position", [0.05, 0.05, 0.7, 0.75]));
 
-    data.previous_step_button = uicontrol(
-        "style", "pushbutton",
-        "units", "normalized",
-        "string", "Previous Step",
-        "foregroundcolor", data.colour_grey_800,
-        "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.80, 0.15, 0.05],
-        "fontunits", "normalized",
-        "fontsize", data.font_size_300,
-        "tooltipstring", "Step to the previous generation.",
-        "callback", @on_previous_step
-    );
-
     data.next_step_button = uicontrol(
         "style", "pushbutton",
         "units", "normalized",
@@ -125,19 +112,6 @@ function data = create_gui(data)
         "tooltipstring", "Adjust the simulation speed.",
         "callback", @on_adjust_speed
     );
-
-    data.toggle_edit_mode_button = uicontrol(
-        "style", "togglebutton",
-        "units", "normalized",
-        "string", "Toggle Edit Mode",
-        "foregroundcolor", data.colour_grey_800,
-        "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.10, 0.15, 0.05],
-        "fontunits", "normalized",
-        "fontsize", data.font_size_300,
-        "tooltipstring", "Toggle edit world mode.",
-        "callback", @on_toggle_edit_mode
-    );
     
     guidata(data.fig, data);
     drawnow();
@@ -145,21 +119,12 @@ function data = create_gui(data)
     waitfor(data.fig);
 endfunction
 
-
 % Update world and UI elements.
 function update_gui(data, source)
     set(data.img, "cdata", data.world.get_colours());
     set(data.generation_label, "string", data.world.generation_str());
     guidata(source, data);
     drawnow();
-endfunction
-
-function on_previous_step(source, event)
-    data = guidata(source);
-
-    data.world = data.world.previous_step();
-
-    update_gui(data, source);
 endfunction
 
 function on_next_step(source, event)
@@ -249,35 +214,6 @@ function on_adjust_speed(source, event)
 
     data.play_speed = get(gcbo, "value");
     guidata(source, data);
-endfunction
-
-function on_toggle_edit_mode(source, event)
-    data = guidata(source);
-
-    data.is_editing = get(gcbo, "value");
-    guidata(source, data);
-
-    while (data.is_editing)
-        [x, y, button] = ginput(1);
-        data = guidata(source);
-        if (!data.is_editing)
-            break;
-        endif
-
-        if (button == 1)
-            x = round(x);
-            y = round(y);
-
-            cells = data.world.get_cells();
-            if (!(x < 1 | x > columns(cells) | y < 1 | y > rows(cells)))
-                data.world = data.world.flip_cell(x, y);
-                update_gui(data, source);
-            endif
-        endif
-
-        pause(0.1);
-        data = guidata(source);
-    endwhile
 endfunction
 
 function on_window_size_change(source, event)
