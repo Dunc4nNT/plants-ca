@@ -224,6 +224,14 @@ function on_adjust_speed(source, event)
     guidata(source, data);
 endfunction
 
+function on_help(source, event)
+    data = guidata(source);
+
+    web("http://langers.nl/wiki/doku.php?id=biomaker_2025:welkom");
+
+    update_gui(data, source);
+endfunction
+
 function on_window_size_change(source, event)
     data = guidata(source);
     update_gui(data, source);

@@ -27,9 +27,9 @@ classdef plants_world
         % Amount of energy a new leaf cell starts with.
         leaf_start_energy = 5;
         % Probability a root grows in a generation.
-        root_grow_probability = 1/3;
+        root_grow_probability = 2/3;
         % Probability a leaf grows in a generation.
-        leaf_grow_probability = 2/3;
+        leaf_grow_probability = 1/3;
         % Probability a flower grows in a generation.
         flower_grow_probability = 1/50;
         % Amount of energy a new flower cell starts with.
