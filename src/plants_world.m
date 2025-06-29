@@ -323,8 +323,30 @@ classdef plants_world
             this.generation++;
         endfunction
 
-        function this = previous_step(this)
-            error("previous_step is not implemented.")
+        function this = import(this, type_cells)
+            energy_cells = zeros(size(type_cells));
+
+            air_cells = type_cells == material_type.AIR;
+            earth_cells = type_cells == material_type.EARTH;
+            seed_above_cells = type_cells == material_type.SEED_ABOVE;
+            seed_below_cells = type_cells == material_type.SEED_BELOW;
+            leaf_cells = type_cells == material_type.LEAF;
+            root_cells = type_cells == material_type.ROOT;
+            flower_cells = type_cells == material_type.FLOWER;
+            sun_cells = type_cells == material_type.SUN;
+            immovable_cells = type_cells == material_type.IMMOVABLE;
+
+            energy_cells(air_cells) = this.default_air_energy;
+            energy_cells(earth_cells) = this.default_earth_energy;
+            energy_cells(seed_above_cells) = this.default_seed_above_energy;
+            energy_cells(seed_below_cells) = this.default_seed_below_energy;
+            energy_cells(leaf_cells) = this.default_leaf_energy;
+            energy_cells(root_cells) = this.default_root_energy;
+            energy_cells(flower_cells) = this.default_flower_energy;
+            energy_cells(sun_cells) = this.default_sun_energy;
+            energy_cells(immovable_cells) = this.default_immovable_energy;
+
+            this = this.set_cells(type_cells, energy_cells);
         endfunction
     endmethods
 endclassdef

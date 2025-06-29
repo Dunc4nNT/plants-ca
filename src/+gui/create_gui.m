@@ -46,7 +46,7 @@ function data = create_gui(data)
         "string", "Reset World",
         "foregroundcolor", data.colour_grey_800,
         "backgroundcolor", data.secondary_colour_300,
-        "position", [0.80, 0.19, 0.15, 0.05],
+        "position", [0.80, 0.26, 0.15, 0.05],
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "tooltipstring", "Reset world with random cells.",
@@ -63,6 +63,19 @@ function data = create_gui(data)
         "fontunits", "normalized",
         "fontsize", data.font_size_300,
         "fontweight", "bold"
+    );
+
+    data.import_button = uicontrol(
+        "style", "pushbutton",
+        "units", "normalized",
+        "string", "Import World",
+        "foregroundcolor", data.colour_grey_800,
+        "backgroundcolor", data.secondary_colour_300,
+        "position", [0.80, 0.19, 0.15, 0.05],
+        "fontunits", "normalized",
+        "fontsize", data.font_size_300,
+        "tooltipstring", "Import a world.",
+        "callback", @on_import
     );
 
     data.export_button = uicontrol(
@@ -153,7 +166,7 @@ endfunction
 
 function on_export(source, event)
     data = guidata(source);
-    valid_export_formats = {"*.txt;*.csv", "Text Files"; "*.png;", "Images"};
+    valid_export_formats = {"*.txt;*.csv", "Text Files"};
 
     [filename, filepath] = uiputfile(
         valid_export_formats,
@@ -161,10 +174,8 @@ function on_export(source, event)
         "world.txt"
     );
 
-    if (endsWith(filename, {".png"}))
-        imwrite(data.world.cells, [filepath, filename]);
-    elseif (endsWith(filename, {".txt", ".csv"}))
-        csvwrite([filepath, filename], data.world.cells);
+    if (endsWith(filename, {".txt", ".csv"}))
+        csvwrite([filepath, filename], data.world.type_cells);
     else
         errordlg("File save format not supported.", "SAVE ERROR");
         return;
@@ -173,7 +184,7 @@ endfunction
 
 function on_import(source, event)
     data = guidata(source);
-    valid_import_formats = {"*.txt;*.csv", "Text Files"; "*.png;", "Images"};
+    valid_import_formats = {"*.txt;*.csv", "Text Files"};
 
     [filename, filepath] = uigetfile(
         valid_import_formats,
@@ -181,9 +192,7 @@ function on_import(source, event)
         "world.txt"
     );
 
-    if (endsWith(filename, {".png"}))
-        imported_world = imread([filepath, filename]);
-    elseif (endsWith(filename, {".txt", ".csv"}))
+    if (endsWith(filename, {".txt", ".csv"}))
         imported_world = csvread([filepath, filename]);
     else
         errordlg("File save format not supported.", "Error Saving");
@@ -191,9 +200,9 @@ function on_import(source, event)
     endif
 
     try
-        data.world = data.world.set_cells(logical(imported_world));
+        data.world = data.world.import(imported_world);
     catch err
-        errordlf(err.message, "IMPORT ERROR");
+        errordlg(err.message, "IMPORT ERROR");
         return;
     end_try_catch
 
